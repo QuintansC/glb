@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm init *)",
+      "Bash(npm install *)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm approve-builds *)",
+      "Bash(pnpm db:generate)",
+      "Bash(python3 -c \"import sys,json; json.load\\(sys.stdin\\); print\\('JSON válido'\\)\")",
+      "Bash(curl -s -o /tmp/frame_test.png \"https://oticasdiniz.vtexassets.com/arquivos/ids/532128-1200-auto?v=638756696709730000&width=1200&height=auto&aspect=true\")",
+      "Read(//tmp/**)",
+      "WebSearch",
+      "WebFetch(domain:developers.vtex.com)",
+      "WebFetch(domain:github.com)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\gustavo.quintans\\Documents\\Projetos\\vision\\react\\utils\\textures"
+    ]
+  }
+}

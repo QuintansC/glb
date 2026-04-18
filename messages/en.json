@@ -1,0 +1,8 @@
+{
+  "catalog": "Catalog",
+  "virtual-tryon.camera-consent-title": "Try before you buy",
+  "virtual-tryon.camera-consent-description": "The virtual try-on uses your device camera. Video is processed locally and is never recorded or sent to any server.",
+  "virtual-tryon.camera-consent-button": "Enable camera",
+  "virtual-tryon.face-guide": "Position your face in the center",
+  "virtual-tryon.camera-error": "Camera permission denied or device not found."
+}

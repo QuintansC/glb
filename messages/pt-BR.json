@@ -1,0 +1,8 @@
+{
+  "catalog": "Catálogo",
+  "virtual-tryon.camera-consent-title": "Experimente antes de comprar",
+  "virtual-tryon.camera-consent-description": "O provador virtual usa a câmera do seu dispositivo. O vídeo é processado localmente e não é gravado nem enviado para nenhum servidor.",
+  "virtual-tryon.camera-consent-button": "Ativar câmera",
+  "virtual-tryon.face-guide": "Posicione seu rosto no centro",
+  "virtual-tryon.camera-error": "Permissão de câmera negada ou dispositivo não encontrado."
+}

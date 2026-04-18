@@ -1,0 +1,8 @@
+{
+  "virtual-tryon": {
+    "title": "Provador Virtual",
+    "description": "Componente de provador virtual de armações usando câmera em tempo real",
+    "type": "object",
+    "properties": {}
+  }
+}
