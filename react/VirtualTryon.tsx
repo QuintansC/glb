@@ -11,7 +11,7 @@ import { FrameSelector } from "./components/FrameSelector";
 import { ConsentGate } from "./components/ConsentGate";
 import type { VtexFrame } from "./types";
 
-const MODEL_3D_URL = "/assets/oticasdiniz.virtual-tryon/public/glb-models/diniz-test/model.glb";
+const MODEL_3D_URL = "https://cdn.jsdelivr.net/gh/QuintansC/glb@main/public/glb-models/diniz-test/model.glb";
 
 interface VirtualTryonProps {
   frames: VtexFrame[];
