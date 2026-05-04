@@ -46,12 +46,12 @@ export const TryonCanvas3D = forwardRef<TryonCanvas3DHandle, TryonCanvas3DProps>
           return;
         }
 
-        const width = video.videoWidth || 640;
-        const height = video.videoHeight || 480;
+        const displayW = canvas.clientWidth || 640;
+        const displayH = canvas.clientHeight || 480;
 
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(width, height, false);
+        renderer.setSize(displayW, displayH, false);
 
         const scene = new THREE.Scene();
         scene.add(new THREE.AmbientLight(0xffffff, 1.2));
@@ -60,7 +60,7 @@ export const TryonCanvas3D = forwardRef<TryonCanvas3DHandle, TryonCanvas3DProps>
         scene.add(dir);
 
         const fov = 63;
-        const camera = new THREE.PerspectiveCamera(fov, width / height, 1, 1000);
+        const camera = new THREE.PerspectiveCamera(fov, displayW / displayH, 1, 1000);
         camera.position.set(0, 0, 0);
 
         // Occluder simples: elipsóide invisível no lugar da cabeça.
@@ -135,11 +135,11 @@ export const TryonCanvas3D = forwardRef<TryonCanvas3DHandle, TryonCanvas3DProps>
 
         const { THREE, renderer, scene, camera, group, occluder } = s;
 
-        const width = video.videoWidth;
-        const height = video.videoHeight;
-        if (width && (renderer.domElement.width !== width || renderer.domElement.height !== height)) {
-          renderer.setSize(width, height, false);
-          camera.aspect = width / height;
+        const displayW = renderer.domElement.clientWidth;
+        const displayH = renderer.domElement.clientHeight;
+        if (displayW && (renderer.domElement.width !== displayW || renderer.domElement.height !== displayH)) {
+          renderer.setSize(displayW, displayH, false);
+          camera.aspect = displayW / displayH;
           camera.updateProjectionMatrix();
         }
 
