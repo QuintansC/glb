@@ -5,6 +5,7 @@ import type { VtexFrame } from "../types";
 
 export interface TryonCanvasHandle {
   draw: (result: FaceLandmarkerResult) => void;
+  getCanvas: () => HTMLCanvasElement | null;
 }
 
 interface TryonCanvasProps {
@@ -51,6 +52,7 @@ export const TryonCanvas = forwardRef<TryonCanvasHandle, TryonCanvasProps>(
           drawFrameOverlay(ctx, result, img, frame, video.videoWidth, video.videoHeight);
         }
       },
+      getCanvas: () => canvasRef.current,
     }));
 
     return (
@@ -61,6 +63,9 @@ export const TryonCanvas = forwardRef<TryonCanvasHandle, TryonCanvasProps>(
           inset: 0,
           width: "100%",
           height: "100%",
+          // Mesmo recorte do <video> (object-fit: cover); sem isso o canvas é
+          // esticado e o overlay desalinha quando o aspecto do vídeo difere do box.
+          objectFit: "cover",
           pointerEvents: "none",
           transform: "scaleX(-1)",
         }}

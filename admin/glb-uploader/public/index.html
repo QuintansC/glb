@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cadastro de Modelos 3D — Provador Virtual</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <!-- Preview 3D. Carregado do CDN (o painel roda localmente, com internet). -->
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"
+    ></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__dot"></span>
+        <div>
+          <h1>Cadastro de Modelos 3D</h1>
+          <p class="brand__sub">Provador Virtual · uso interno</p>
+        </div>
+      </div>
+      <div class="target" id="target">
+        <span class="target__label">Storage alvo</span>
+        <code id="target-url">carregando…</code>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============================ UPLOAD ============================ -->
+      <section class="card upload">
+        <div class="tabs" role="tablist">
+          <button class="tab is-active" data-tab="single" role="tab">Um modelo</button>
+          <button class="tab" data-tab="batch" role="tab">Vários (lote)</button>
+        </div>
+
+        <!-- ---------------------- MODO: UM MODELO ---------------------- -->
+        <div class="pane" data-pane="single">
+        <p class="hint">
+          O provador busca o arquivo pela convenção
+          <code>{skuId}.glb</code>. Informe o SKU e envie o
+          <code>.glb</code> — o nome final é gerado automaticamente.
+        </p>
+
+        <div class="field">
+          <label for="sku">SKU (itemId da VTEX)</label>
+          <input
+            id="sku"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            placeholder="ex.: 12345"
+            spellcheck="false"
+          />
+          <p class="field__status" id="sku-status"></p>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0">
+          <input id="file" type="file" accept=".glb,model/gltf-binary" hidden />
+          <div class="dropzone__inner" id="dropzone-inner">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 16V4" /><path d="m6 10 6-6 6 6" /><path d="M4 20h16" />
+            </svg>
+            <p><strong>Arraste o .glb aqui</strong> ou clique para escolher</p>
+            <p class="dropzone__meta" id="dropzone-meta"></p>
+          </div>
+        </div>
+
+        <div class="preview" id="preview" hidden>
+          <model-viewer
+            id="viewer"
+            camera-controls
+            auto-rotate
+            shadow-intensity="1"
+            exposure="1"
+            environment-image="neutral"
+            ar-status="not-presenting"
+          ></model-viewer>
+          <p class="preview__caption" id="preview-caption"></p>
+        </div>
+
+        <div class="upload__footer">
+          <div class="target-name" id="target-name"></div>
+          <button id="submit" class="btn btn--primary" disabled>
+            Enviar modelo
+          </button>
+        </div>
+        </div><!-- /pane single -->
+
+        <!-- ------------------------ MODO: LOTE ------------------------ -->
+        <div class="pane" data-pane="batch" hidden>
+          <p class="hint">
+            Cada arquivo vira um modelo. O <strong>SKU é lido do nome do
+            arquivo</strong> — ex.: <code>12345.glb</code> vira o SKU
+            <code>12345</code>. Dá pra ajustar o SKU de cada linha antes de enviar.
+          </p>
+
+          <div class="dropzone" id="batch-dropzone" tabindex="0">
+            <input id="batch-file" type="file" accept=".glb,model/gltf-binary" multiple hidden />
+            <div class="dropzone__inner">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 16V4" /><path d="m6 10 6-6 6 6" /><path d="M4 20h16" />
+              </svg>
+              <p><strong>Arraste vários .glb aqui</strong> ou clique para escolher</p>
+              <p class="dropzone__meta">Nomeie os arquivos como <code>{sku}.glb</code> para agilizar</p>
+            </div>
+          </div>
+
+          <div class="batch-controls" id="batch-controls" hidden>
+            <label class="checkbox">
+              <input type="checkbox" id="batch-overwrite" />
+              Substituir modelos que já existem
+            </label>
+            <button class="btn btn--ghost btn--sm" id="batch-clear">Limpar lista</button>
+          </div>
+
+          <div class="table-wrap" id="batch-table-wrap" hidden>
+            <table class="batch-table">
+              <thead>
+                <tr>
+                  <th>Arquivo</th>
+                  <th>SKU</th>
+                  <th>Tamanho</th>
+                  <th>Status</th>
+                  <th class="col-actions"></th>
+                </tr>
+              </thead>
+              <tbody id="batch-rows"></tbody>
+            </table>
+          </div>
+
+          <div class="upload__footer">
+            <div class="target-name" id="batch-summary"></div>
+            <button id="batch-submit" class="btn btn--primary" disabled>
+              Enviar modelos
+            </button>
+          </div>
+        </div><!-- /pane batch -->
+      </section>
+
+      <!-- ============================ LISTA ============================ -->
+      <section class="card list">
+        <div class="list__head">
+          <h2>Modelos cadastrados <span class="count" id="count"></span></h2>
+          <button id="refresh" class="btn btn--ghost">Atualizar</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>SKU</th>
+                <th>Tamanho</th>
+                <th>Atualizado</th>
+                <th class="col-actions">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="models"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="empty" hidden>Nenhum modelo cadastrado ainda.</p>
+      </section>
+    </main>
+
+    <!-- Modal de preview de um modelo já cadastrado -->
+    <div class="modal" id="modal" hidden>
+      <div class="modal__backdrop" data-close></div>
+      <div class="modal__body">
+        <div class="modal__head">
+          <h3 id="modal-title">Preview</h3>
+          <button class="icon-btn" data-close aria-label="Fechar">✕</button>
+        </div>
+        <model-viewer
+          id="modal-viewer"
+          camera-controls
+          auto-rotate
+          shadow-intensity="1"
+          environment-image="neutral"
+        ></model-viewer>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

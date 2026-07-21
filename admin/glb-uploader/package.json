@@ -1,0 +1,28 @@
+{
+  "name": "glb-uploader",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Painel interno para cadastro de modelos 3D (.glb) do provador virtual no storage S3. Roda localmente na máquina de quem faz o cadastro.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build:exe": "node scripts/build-exe.mjs windows-x64",
+    "build:exe:mac": "node scripts/build-exe.mjs darwin-arm64",
+    "build:exe:linux": "node scripts/build-exe.mjs linux-x64"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.637.0",
+    "@fastify/multipart": "^8.3.0",
+    "@fastify/static": "^7.0.4",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.14",
+    "@types/node": "^22.5.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4"
+  }
+}

@@ -1,0 +1,8 @@
+node_modules
+.env
+*.log
+
+# O executável gerado EMBUTE as credenciais do storage — nunca versionar.
+dist/
+# Entrypoint temporário do build (também contém credenciais).
+build/
