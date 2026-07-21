@@ -3,6 +3,10 @@ node_modules
 *.log
 
 # O executável gerado EMBUTE as credenciais do storage — nunca versionar.
+# Inclui os empacotamentos: `dist/` sozinho não pega dist.zip, e foi assim
+# que o binário vazou para o histórico uma vez.
 dist/
+dist.zip
+*.exe
 # Entrypoint temporário do build (também contém credenciais).
 build/
