@@ -1,0 +1,57 @@
+/*
+ * Default styling for the Provador Virtual CTA.
+ *
+ * The selectors are scoped to the generated CSS Handle classes
+ * (`useCssHandles(['tryonButton', 'tryonButtonIcon'])`), so all styling lives
+ * on a single class handle — no element/attribute selectors, in line with
+ * VTEX's move away from deprecated CSS selectors (bit.ly/io-css-selectors).
+ *
+ * A store theme can override any of these rules by targeting the same handle
+ * class in its own `styles/css/oticasdiniz.virtual-tryon.css`.
+ *
+ * NOTE: the `0-x` segment is the app major version. Bump it here if the app's
+ * major version changes (vtex-{app}-{major}-x-{handle}).
+ */
+
+/*
+ * Pílula branca compacta, pensada para ficar sobreposta à foto do produto
+ * na PDP (overlay top-center, estilo Ray-Ban). O posicionamento do overlay
+ * é responsabilidade do tema (.flexRowContent--tryon-overlay); aqui fica só
+ * o visual do botão. pointer-events: auto reativa o clique dentro do
+ * overlay, que usa pointer-events: none para não bloquear o zoom da imagem.
+ */
+:global(.oticasdiniz-virtual-tryon-0-x-tryonButton) {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  width: auto;
+  padding: 0 20px;
+  border: none;
+  border-radius: 500px;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  color: #16171b;
+  font-family: 'proxima-nova', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 120%;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+:global(.oticasdiniz-virtual-tryon-0-x-tryonButton):hover {
+  background: #f4f4f4;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+:global(.oticasdiniz-virtual-tryon-0-x-tryonButtonIcon) {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

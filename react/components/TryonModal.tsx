@@ -4,8 +4,6 @@ import type { FaceLandmarkerResult } from "../typings/mediapipe";
 import { useCamera } from "../hooks/useCamera";
 import { useFaceTracking } from "../hooks/useFaceTracking";
 import { useTryonState } from "../store/tryon.store";
-import { TryonCanvas } from "./TryonCanvas";
-import type { TryonCanvasHandle } from "./TryonCanvas";
 import { TryonCanvas3D } from "./TryonCanvas3D";
 import type { TryonCanvas3DHandle } from "./TryonCanvas3D";
 import { FrameSelector } from "./FrameSelector";
@@ -22,8 +20,8 @@ interface TryonModalProps {
 export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps) {
   const [hasConsent, setHasConsent] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
-  const [use3D, setUse3D] = useState(false);
-  const canvasRef = useRef<TryonCanvasHandle>(null);
+  const [model3dLoading, setModel3dLoading] = useState(true);
+  const [photoFlash, setPhotoFlash] = useState(false);
   const canvas3DRef = useRef<TryonCanvas3DHandle>(null);
 
   const { videoRef, ready, error } = useCamera(hasConsent && open);
@@ -50,14 +48,54 @@ export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps)
 
   const handleResult = useCallback((result: FaceLandmarkerResult) => {
     setFaceDetected(result.faceLandmarks.length > 0);
-    if (use3D) {
-      canvas3DRef.current?.draw(result);
-    } else {
-      canvasRef.current?.draw(result);
-    }
-  }, [use3D]);
+    canvas3DRef.current?.draw(result);
+  }, []);
 
   useFaceTracking(videoRef, { onResult: handleResult, enabled: hasConsent && ready && open });
+
+  // Compõe vídeo + óculos num canvas com o mesmo recorte/espelhamento da tela
+  // e baixa como PNG.
+  const handlePhoto = useCallback(() => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth) return;
+    const overlay = canvas3DRef.current?.getCanvas();
+
+    const box = video.getBoundingClientRect();
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const cover = Math.max(box.width / vw, box.height / vh);
+    const visW = vw && cover ? box.width / cover : vw;
+    const visH = vh && cover ? box.height / cover : vh;
+    const cropX = (vw - visW) / 2;
+    const cropY = (vh - visH) / 2;
+
+    const out = document.createElement("canvas");
+    out.width = Math.round(visW);
+    out.height = Math.round(visH);
+    const ctx = out.getContext("2d");
+    if (!ctx) return;
+
+    ctx.translate(out.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, cropX, cropY, visW, visH, 0, 0, out.width, out.height);
+    if (overlay && overlay.width) {
+      // canvas 3D já representa exatamente o recorte visível
+      ctx.drawImage(overlay, 0, 0, overlay.width, overlay.height, 0, 0, out.width, out.height);
+    }
+
+    setPhotoFlash(true);
+    setTimeout(() => setPhotoFlash(false), 180);
+
+    out.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `provador-virtual-${Date.now()}.png`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  }, [videoRef]);
 
   if (!open) return null;
 
@@ -147,11 +185,12 @@ export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps)
 
         {hasConsent && ready && (
           <React.Fragment>
-            {use3D ? (
-              <TryonCanvas3D ref={canvas3DRef} videoRef={videoRef} modelUrl={modelUrl} />
-            ) : (
-              <TryonCanvas ref={canvasRef} videoRef={videoRef} selectedFrame={selectedFrame} />
-            )}
+            <TryonCanvas3D
+              ref={canvas3DRef}
+              videoRef={videoRef}
+              modelUrl={modelUrl}
+              onLoadingChange={setModel3dLoading}
+            />
 
             {frames.length > 1 && (
               <FrameSelector
@@ -161,23 +200,87 @@ export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps)
               />
             )}
 
+            {/* Loading do modelo 3D */}
+            {model3dLoading && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 56,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "rgba(0,0,0,0.6)",
+                  color: "#fff",
+                  padding: "8px 16px",
+                  borderRadius: 20,
+                  fontSize: 13,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span
+                  style={{
+                    width: 14,
+                    height: 14,
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    borderTopColor: "#fff",
+                    borderRadius: "50%",
+                    animation: "tryon-spin 0.8s linear infinite",
+                  }}
+                />
+                Carregando óculos 3D…
+                <style>{`@keyframes tryon-spin { to { transform: rotate(360deg); } }`}</style>
+              </div>
+            )}
+
+            {/* Botão de foto (obturador) */}
             <button
-              onClick={() => setUse3D((v) => !v)}
+              onClick={handlePhoto}
+              disabled={model3dLoading}
+              aria-label="Tirar foto e baixar"
+              title="Tirar foto e baixar"
               style={{
                 position: "absolute",
-                top: 12,
-                right: 12,
-                background: "rgba(0,0,0,0.6)",
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.3)",
-                padding: "6px 12px",
-                borderRadius: 20,
-                fontSize: 12,
-                cursor: "pointer",
+                bottom: frames.length > 1 ? 104 : 16,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                border: "3px solid #fff",
+                background: "rgba(255,255,255,0.25)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
+                cursor: model3dLoading ? "default" : "pointer",
+                opacity: model3dLoading ? 0.4 : 1,
+                padding: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {use3D ? "2D" : "3D"}
+              <span
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "#fff",
+                }}
+              />
             </button>
+
+            {/* Flash de captura */}
+            {photoFlash && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "#fff",
+                  opacity: 0.7,
+                  pointerEvents: "none",
+                }}
+              />
+            )}
 
             {!faceDetected && (
               <div
