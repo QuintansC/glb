@@ -1,7 +1,7 @@
 {
   "vendor": "oticasdiniz",
   "name": "virtual-tryon",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "title": "Provador Virtual de Armações",
   "description": "Provador virtual que usa a câmera do dispositivo para sobrepor armações no rosto do usuário em tempo real.",
   "builders": {
