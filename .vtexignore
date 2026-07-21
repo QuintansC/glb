@@ -1,0 +1,9 @@
+.git
+node_modules
+.DS_Store
+*.log
+.env
+
+# Ferramenta interna de upload de GLB — não faz parte do app VTEX.
+# Contém binários de ~260MB e credenciais de storage.
+admin/
