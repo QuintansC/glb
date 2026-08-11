@@ -4,8 +4,23 @@ import Fastify from "fastify";
 import fastifyStatic from "@fastify/static";
 import fastifyMultipart from "@fastify/multipart";
 import { config, publicUrlForSku } from "./config.js";
-import { listModels, uploadModel, deleteModel, modelExists } from "./s3.js";
-import { isValidSku, isValidGlb } from "./validation.js";
+import {
+  listModels,
+  uploadModel,
+  deleteModel,
+  modelExists,
+  readMeta,
+  writeMeta,
+} from "./s3.js";
+import {
+  isValidSku,
+  isValidGlb,
+  parseTotalWidthMm,
+  MIN_TOTAL_WIDTH_MM,
+  MAX_TOTAL_WIDTH_MM,
+} from "./validation.js";
+
+const WIDTH_RANGE_ERROR = `Largura inválida. Informe um número entre ${MIN_TOTAL_WIDTH_MM} e ${MAX_TOTAL_WIDTH_MM} mm.`;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -33,6 +48,8 @@ app.get("/api/config", async () => ({
   endpoint: config.s3.endpoint,
   convention: "{skuId}.glb",
   maxUploadMb: Math.round(config.maxUploadBytes / (1024 * 1024)),
+  minTotalWidthMm: MIN_TOTAL_WIDTH_MM,
+  maxTotalWidthMm: MAX_TOTAL_WIDTH_MM,
 }));
 
 /** Lista os modelos já cadastrados. */
@@ -47,11 +64,22 @@ app.get("/api/models", async (_req, reply) => {
   }
 });
 
-/** Sobe (ou substitui) o modelo de um SKU. */
+/**
+ * Sobe (ou substitui) o modelo de um SKU.
+ *
+ * A largura vem na query (`?widthMm=134`), não como campo do multipart: aqui o
+ * corpo é lido em streaming e só os campos que chegam ANTES do arquivo ficam
+ * acessíveis, o que deixaria a ordem do FormData virar regra implícita.
+ */
 app.post("/api/models/:sku", async (req, reply) => {
   const sku = (req.params as { sku: string }).sku;
   if (!isValidSku(sku)) {
     return reply.code(400).send({ error: "SKU inválido. Use apenas letras, números, - e _." });
+  }
+
+  const totalWidthMm = parseTotalWidthMm((req.query as { widthMm?: string }).widthMm);
+  if (totalWidthMm === undefined) {
+    return reply.code(400).send({ error: WIDTH_RANGE_ERROR });
   }
 
   const data = await req.file();
@@ -85,8 +113,8 @@ app.post("/api/models/:sku", async (req, reply) => {
   }
 
   try {
-    const model = await uploadModel(sku, buffer);
-    app.log.info({ sku, size: buffer.byteLength }, "modelo cadastrado");
+    const model = await uploadModel(sku, buffer, totalWidthMm);
+    app.log.info({ sku, size: buffer.byteLength, totalWidthMm }, "modelo cadastrado");
     return { ok: true, model };
   } catch (err) {
     app.log.error(err);
@@ -103,10 +131,37 @@ app.get("/api/models/:sku/exists", async (req, reply) => {
     return reply.code(400).send({ error: "SKU inválido." });
   }
   try {
-    return { exists: await modelExists(sku), url: publicUrlForSku(sku) };
+    const [exists, meta] = await Promise.all([modelExists(sku), readMeta(sku)]);
+    return {
+      exists,
+      url: publicUrlForSku(sku),
+      totalWidthMm: meta?.totalWidthMm ?? null,
+    };
   } catch (err) {
     app.log.error(err);
     return reply.code(502).send({ error: "Falha ao consultar o storage.", detail: String(err) });
+  }
+});
+
+/** Atualiza só a medida de um SKU, sem reenviar o .glb (backfill/correção). */
+app.put("/api/models/:sku/meta", async (req, reply) => {
+  const sku = (req.params as { sku: string }).sku;
+  if (!isValidSku(sku)) {
+    return reply.code(400).send({ error: "SKU inválido." });
+  }
+  const totalWidthMm = parseTotalWidthMm(
+    (req.body as { totalWidthMm?: unknown } | undefined)?.totalWidthMm
+  );
+  if (totalWidthMm === undefined || totalWidthMm === null) {
+    return reply.code(400).send({ error: WIDTH_RANGE_ERROR });
+  }
+  try {
+    await writeMeta(sku, { totalWidthMm });
+    app.log.info({ sku, totalWidthMm }, "medida atualizada");
+    return { ok: true, totalWidthMm };
+  } catch (err) {
+    app.log.error(err);
+    return reply.code(502).send({ error: "Falha ao gravar a medida.", detail: String(err) });
   }
 });
 

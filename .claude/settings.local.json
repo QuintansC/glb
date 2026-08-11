@@ -12,7 +12,14 @@
       "Read(//tmp/**)",
       "WebSearch",
       "WebFetch(domain:developers.vtex.com)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(node -e ' *)",
+      "Bash(node --check public/app.js)",
+      "Bash(python3 -)",
+      "Bash(sed -i 's#\\\\.\\\\./\\\\.\\\\./\\\\.\\\\./\\\\.\\\\./home/gustavo-quintans/Projetos/vision/react/utils/#/home/gustavo-quintans/Projetos/vision/react/utils/#g' /tmp/claude-1000/-home-gustavo-quintans-Projetos-vision/f4670ed5-ce63-4c4e-865a-28653d71ccb3/scratchpad/specs.test.ts)",
+      "Bash(npx tsx *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\gustavo.quintans\\Documents\\Projetos\\vision\\react\\utils\\textures"

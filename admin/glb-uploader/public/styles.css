@@ -208,6 +208,23 @@ main {
 .field__status.is-error {
   color: var(--danger);
 }
+.field input.is-invalid {
+  border-color: var(--danger);
+}
+/* SKU e largura lado a lado; empilham quando não cabe. */
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 0.6fr);
+  gap: 0 14px;
+}
+@media (max-width: 520px) {
+  .field-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.hint--tight {
+  margin-top: -4px;
+}
 
 /* ------------------------------ dropzone -------------------------------- */
 .dropzone {
@@ -361,6 +378,30 @@ model-viewer {
 }
 .batch-table .sku-input.is-invalid {
   border-color: var(--danger);
+}
+/* Campo de largura: mesmo visual do SKU, nas duas tabelas. */
+.width-input {
+  width: 100%;
+  min-width: 72px;
+  max-width: 110px;
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+}
+.width-input:focus {
+  border-color: var(--primary);
+}
+.width-input.is-invalid {
+  border-color: var(--danger);
+}
+/* Sem medida cadastrada: o provador cai nas specs, então é aviso, não erro. */
+.width-input.is-empty {
+  border-style: dashed;
 }
 .batch-file-name {
   max-width: 22ch;
