@@ -42,18 +42,48 @@
           <code>.glb</code> — o nome final é gerado automaticamente.
         </p>
 
-        <div class="field">
-          <label for="sku">SKU (itemId da VTEX)</label>
-          <input
-            id="sku"
-            type="text"
-            inputmode="numeric"
-            autocomplete="off"
-            placeholder="ex.: 12345"
-            spellcheck="false"
-          />
-          <p class="field__status" id="sku-status"></p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="sku">SKU (itemId da VTEX)</label>
+            <input
+              id="sku"
+              type="text"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="ex.: 12345"
+              spellcheck="false"
+            />
+            <p class="field__status" id="sku-status"></p>
+          </div>
+
+          <div class="field">
+            <label for="width">Largura total (mm)</label>
+            <input
+              id="width"
+              type="number"
+              inputmode="decimal"
+              step="0.5"
+              autocomplete="off"
+              placeholder="ex.: 138"
+              spellcheck="false"
+            />
+            <p class="field__status" id="width-status"></p>
+          </div>
         </div>
+
+        <p class="hint hint--tight">
+          A largura é a medida da armação <strong>no ponto mais largo</strong>
+          (charneira a charneira, de fora a fora). É o que faz uma armação
+          pequena aparecer pequena no rosto e uma grande aparecer grande — o
+          <code>.glb</code> sai normalizado da exportação e não carrega escala
+          real. Fica salva em <code>{skuId}.json</code>, ao lado do modelo.
+          <br />
+          <strong>Não é</strong> o "Tamanho Frontal" do catálogo: aquele mede só
+          a frente (lente × 2 + ponte) e sai ~12 mm menor.
+          <br />
+          Se deixar em branco, o provador usa as specs do produto na VTEX e, na
+          falta delas, uma armação média.
+        </p>
 
         <div class="dropzone" id="dropzone" tabindex="0">
           <input id="file" type="file" accept=".glb,model/gltf-binary" hidden />
@@ -92,7 +122,8 @@
           <p class="hint">
             Cada arquivo vira um modelo. O <strong>SKU é lido do nome do
             arquivo</strong> — ex.: <code>12345.glb</code> vira o SKU
-            <code>12345</code>. Dá pra ajustar o SKU de cada linha antes de enviar.
+            <code>12345</code>. Dá pra ajustar o SKU e a largura de cada linha
+            antes de enviar; linha sem largura cai nas specs da VTEX.
           </p>
 
           <div class="dropzone" id="batch-dropzone" tabindex="0">
@@ -120,6 +151,7 @@
                 <tr>
                   <th>Arquivo</th>
                   <th>SKU</th>
+                  <th>Largura (mm)</th>
                   <th>Tamanho</th>
                   <th>Status</th>
                   <th class="col-actions"></th>
@@ -149,6 +181,7 @@
             <thead>
               <tr>
                 <th>SKU</th>
+                <th>Largura (mm)</th>
                 <th>Tamanho</th>
                 <th>Atualizado</th>
                 <th class="col-actions">Ações</th>

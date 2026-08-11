@@ -13,11 +13,24 @@ https://s3-sp4.ssc.cl9.cloud/ecommerce/glb-models/{skuId}.glb
 Cadastrar um modelo = subir um arquivo `{skuId}.glb` nessa pasta. É exatamente
 isso que este painel faz — com preview 3D, listagem e exclusão.
 
+Junto do modelo o painel grava um `{skuId}.json` com a **largura total da
+armação em mm**. Ela é necessária porque o `.glb` sai normalizado da exportação
+(bounding box em ~[-1,1]) e não carrega escala real: sem essa medida, todas as
+armações apareceriam do mesmo tamanho no rosto. O campo é opcional — sem ele o
+provador cai nas specs do produto na VTEX.
+
+> ⚠️ A largura aqui é a **total** (charneira a charneira). Não é a mesma coisa
+> que o **"Tamanho Frontal"** do catálogo, que é a largura da frente
+> (lente × 2 + ponte, sem as charneiras) — num produto 50–18 ele vale 118. O
+> provador soma as charneiras ao usar as specs; o valor deste campo ele usa como
+> está. Confundir os dois deixa a armação ~10% pequena.
+
 ## Como funciona
 
 ```text
 Navegador (localhost) ──► Servidor local ──► Storage S3 (ecommerce/glb-models)
-   painel + preview         + AWS SDK            {skuId}.glb
+   painel + preview         + AWS SDK          {skuId}.glb  (modelo)
+                                               {skuId}.json (largura em mm)
 ```
 
 As **credenciais do S3 ficam só no servidor local**, nunca no navegador.
@@ -121,41 +134,62 @@ mesma API e o mesmo painel — mudou só o runtime. As validações ficam em
 ### Um modelo (aba "Um modelo")
 
 1. **SKU** — informe o `itemId` do SKU da VTEX (o painel avisa se já existe modelo).
-2. **Arraste o `.glb`** — o preview 3D aparece na hora (ainda é local, não foi enviado).
-3. **Enviar modelo** — sobe como `{skuId}.glb`. Se já existir, pede confirmação para substituir.
+2. **Largura total (mm)** — a medida da armação **no ponto mais largo**, de fora
+   a fora (charneira a charneira). Opcional, mas é o que faz uma armação pequena
+   aparecer pequena e uma grande aparecer grande no rosto. Se o SKU já tiver
+   medida cadastrada, o campo é preenchido sozinho.
+3. **Arraste o `.glb`** — o preview 3D aparece na hora (ainda é local, não foi enviado).
+4. **Enviar modelo** — sobe como `{skuId}.glb` (mais `{skuId}.json` se você
+   informou a largura). Se já existir, pede confirmação para substituir.
+
+> Trocar o `.glb` de um SKU **sem** preencher a largura não apaga a medida que já
+> estava lá — dá para reexportar o modelo sem perder o cadastro.
 
 ### Vários de uma vez (aba "Vários (lote)")
 
 1. **Arraste vários `.glb`** de uma vez. O **SKU de cada arquivo é lido do nome**
    — `12345.glb` vira o SKU `12345`. (Dica: nomeie os arquivos assim antes de exportar.)
-2. Ajuste o SKU de qualquer linha se precisar. O painel avisa SKUs inválidos e
-   SKUs repetidos dentro do lote.
+2. Ajuste o SKU e a **largura (mm)** de qualquer linha se precisar. O painel avisa
+   SKUs inválidos, SKUs repetidos dentro do lote e larguras fora da faixa; linhas
+   sem largura sobem assim mesmo e caem nas specs da VTEX.
 3. Marque **"Substituir modelos que já existem"** se quiser sobrescrever; senão,
    os que já existem são pulados.
 4. **Enviar modelos** — envia em fila (até 3 em paralelo) com status por linha.
 
 ### Modelos cadastrados
 
-Lista o que já está no storage, com preview 3D, link e exclusão.
+Lista o que já está no storage, com preview 3D, link e exclusão. A coluna
+**Largura (mm)** é editável direto na linha: digite e saia do campo (ou tecle
+Enter) para salvar só a medida, sem reenviar o `.glb`. É por aí que se preenche
+o que subiu antes deste campo existir. Excluir o modelo remove o `.json` junto.
 
 Assim que o arquivo está no storage, o provador passa a oferecer o modo 3D
 naquele produto automaticamente (ele faz um `HEAD` para detectar o modelo).
 
 ## Endpoints da API (uso interno do painel)
 
-| Método | Rota                       | Descrição                              |
-| ------ | -------------------------- | -------------------------------------- |
-| GET    | `/api/config`             | Config não-sensível (URL base, limites) |
-| GET    | `/api/models`             | Lista os modelos cadastrados           |
-| GET    | `/api/models/:sku/exists` | Verifica se o SKU já tem modelo        |
-| POST   | `/api/models/:sku`        | Sobe/substitui o `.glb` (multipart)    |
-| DELETE | `/api/models/:sku`        | Remove o modelo do SKU                 |
+| Método | Rota                      | Descrição                                         |
+| ------ | ------------------------- | ------------------------------------------------- |
+| GET    | `/api/config`             | Config não-sensível (URL base, limites, faixa mm) |
+| GET    | `/api/models`             | Lista os modelos cadastrados, com a largura       |
+| GET    | `/api/models/:sku/exists` | Verifica se o SKU já tem modelo e qual a largura  |
+| POST   | `/api/models/:sku`        | Sobe/substitui o `.glb` (multipart)               |
+| PUT    | `/api/models/:sku/meta`   | Atualiza só a largura, sem reenviar o `.glb`      |
+| DELETE | `/api/models/:sku`        | Remove o modelo do SKU (e o `.json`)              |
+
+No `POST`, a largura vai na **query** (`?widthMm=138`), não como campo do
+multipart: o corpo é lido em streaming e só os campos que chegam antes do arquivo
+ficariam acessíveis, o que transformaria a ordem do `FormData` em regra
+implícita.
 
 ## Validações
 
 - SKU: `A-Z a-z 0-9 - _`, até 128 caracteres.
 - Arquivo: extensão `.glb` **e** magic bytes `glTF` versão 2 (evita subir arquivo errado).
 - Tamanho máximo: `MAX_UPLOAD_MB` (padrão 40 MB).
+- Largura: número entre 100 e 165 mm (faixa plausível de armação adulta), ou vazio.
+  Os limites são espelhados em `react/utils/frameMetrics.ts`, que é quem consome
+  o valor no provador — mexeu em um, mexa no outro.
 
 ## Segurança
 

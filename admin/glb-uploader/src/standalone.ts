@@ -17,7 +17,15 @@ import indexHtml from "../public/index.html" with { type: "text" };
 import stylesCss from "../public/styles.css" with { type: "text" };
 import appJs from "../public/app.js" with { type: "text" };
 
-import { isValidSku, isValidGlb } from "./validation.js";
+import {
+  isValidSku,
+  isValidGlb,
+  parseTotalWidthMm,
+  MIN_TOTAL_WIDTH_MM,
+  MAX_TOTAL_WIDTH_MM,
+} from "./validation.js";
+
+const WIDTH_RANGE_ERROR = `Largura inválida. Informe um número entre ${MIN_TOTAL_WIDTH_MM} e ${MAX_TOTAL_WIDTH_MM} mm.`;
 
 // @types/bun tipa `*.html` como HTMLBundle (import de bundle); com
 // `type: "text"` o que chega em runtime é o conteúdo do arquivo.
@@ -96,6 +104,8 @@ async function main(): Promise<void> {
         endpoint: config.s3.endpoint,
         convention: "{skuId}.glb",
         maxUploadMb,
+        minTotalWidthMm: MIN_TOTAL_WIDTH_MM,
+        maxTotalWidthMm: MAX_TOTAL_WIDTH_MM,
       });
     }
 
@@ -111,26 +121,62 @@ async function main(): Promise<void> {
       }
     }
 
-    // /api/models/:sku  e  /api/models/:sku/exists
-    const match = path.match(/^\/api\/models\/([^/]+)(\/exists)?$/);
+    // /api/models/:sku , /api/models/:sku/exists e /api/models/:sku/meta
+    const match = path.match(/^\/api\/models\/([^/]+)(?:\/(exists|meta))?$/);
     if (match) {
       const sku = decodeURIComponent(match[1]!);
-      const isExists = Boolean(match[2]);
+      const sub = match[2];
 
       if (!isValidSku(sku)) {
         return json({ error: "SKU inválido. Use apenas letras, números, - e _." }, 400);
       }
 
-      if (isExists && req.method === "GET") {
+      if (sub === "exists" && req.method === "GET") {
         try {
-          return json({ exists: await s3.modelExists(sku), url: publicUrlForSku(sku) });
+          const [exists, meta] = await Promise.all([
+            s3.modelExists(sku),
+            s3.readMeta(sku),
+          ]);
+          return json({
+            exists,
+            url: publicUrlForSku(sku),
+            totalWidthMm: meta?.totalWidthMm ?? null,
+          });
         } catch (err) {
           console.error("[erro] consultar SKU:", err);
           return json({ error: "Falha ao consultar o storage.", detail: String(err) }, 502);
         }
       }
 
-      if (!isExists && req.method === "POST") {
+      // Atualiza só a medida, sem reenviar o .glb (backfill/correção).
+      if (sub === "meta" && req.method === "PUT") {
+        let totalWidthMm: number | null | undefined;
+        try {
+          const body = (await req.json()) as { totalWidthMm?: unknown };
+          totalWidthMm = parseTotalWidthMm(body?.totalWidthMm);
+        } catch {
+          totalWidthMm = undefined;
+        }
+        if (totalWidthMm === undefined || totalWidthMm === null) {
+          return json({ error: WIDTH_RANGE_ERROR }, 400);
+        }
+        try {
+          await s3.writeMeta(sku, { totalWidthMm });
+          console.log(`  ✔ medida atualizada: ${sku} → ${totalWidthMm} mm`);
+          return json({ ok: true, totalWidthMm });
+        } catch (err) {
+          console.error("[erro] gravar medida:", err);
+          return json({ error: "Falha ao gravar a medida.", detail: String(err) }, 502);
+        }
+      }
+
+      if (!sub && req.method === "POST") {
+        // Mesma convenção do server.ts: a largura vem na query, não no multipart.
+        const totalWidthMm = parseTotalWidthMm(url.searchParams.get("widthMm"));
+        if (totalWidthMm === undefined) {
+          return json({ error: WIDTH_RANGE_ERROR }, 400);
+        }
+
         const form = await req.formData();
         const file = form.get("file");
         if (!(file instanceof File)) {
@@ -152,8 +198,11 @@ async function main(): Promise<void> {
         }
 
         try {
-          const model = await s3.uploadModel(sku, Buffer.from(bytes));
-          console.log(`  ✔ modelo cadastrado: ${sku}.glb (${(bytes.byteLength / 1024).toFixed(0)} KB)`);
+          const model = await s3.uploadModel(sku, Buffer.from(bytes), totalWidthMm);
+          const widthNote = totalWidthMm ? ` · ${totalWidthMm} mm` : "";
+          console.log(
+            `  ✔ modelo cadastrado: ${sku}.glb (${(bytes.byteLength / 1024).toFixed(0)} KB)${widthNote}`
+          );
           return json({ ok: true, model });
         } catch (err) {
           console.error("[erro] upload:", err);
@@ -161,7 +210,7 @@ async function main(): Promise<void> {
         }
       }
 
-      if (!isExists && req.method === "DELETE") {
+      if (!sub && req.method === "DELETE") {
         try {
           await s3.deleteModel(sku);
           console.log(`  ✔ modelo removido: ${sku}.glb`);

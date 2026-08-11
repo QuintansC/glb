@@ -15,9 +15,11 @@ interface TryonModalProps {
   onClose: () => void;
   frames: VtexFrame[];
   modelUrl: string;
+  /** Largura total real da armação em mm — dimensiona o modelo no rosto. */
+  frameWidthMm?: number;
 }
 
-export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps) {
+export function TryonModal({ open, onClose, frames, modelUrl, frameWidthMm }: TryonModalProps) {
   const [hasConsent, setHasConsent] = useState(false);
   const [faceDetected, setFaceDetected] = useState(false);
   const [model3dLoading, setModel3dLoading] = useState(true);
@@ -189,6 +191,7 @@ export function TryonModal({ open, onClose, frames, modelUrl }: TryonModalProps)
               ref={canvas3DRef}
               videoRef={videoRef}
               modelUrl={modelUrl}
+              frameWidthMm={frameWidthMm}
               onLoadingChange={setModel3dLoading}
             />
 

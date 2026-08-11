@@ -72,7 +72,23 @@ export function keyForSku(skuId: string): string {
   return config.s3.prefix ? `${config.s3.prefix}/${skuId}.glb` : `${skuId}.glb`;
 }
 
+/**
+ * Chave do sidecar de medidas, ao lado do .glb. Ex.: glb-models/12345.json
+ *
+ * O .glb é normalizado na exportação (bounding box em ~[-1,1]) e não carrega
+ * escala real, então o provador precisa deste arquivo — ou das specs do
+ * catálogo — para saber de que tamanho desenhar a armação no rosto.
+ */
+export function metaKeyForSku(skuId: string): string {
+  return config.s3.prefix ? `${config.s3.prefix}/${skuId}.json` : `${skuId}.json`;
+}
+
 /** URL pública final que o provador virtual vai buscar para este SKU. */
 export function publicUrlForSku(skuId: string): string {
   return `${config.publicBaseUrl}/${skuId}.glb`;
+}
+
+/** URL pública do sidecar de medidas deste SKU. */
+export function metaPublicUrlForSku(skuId: string): string {
+  return `${config.publicBaseUrl}/${skuId}.json`;
 }
