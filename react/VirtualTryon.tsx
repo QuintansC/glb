@@ -17,6 +17,7 @@ import {
   readSpecNumber,
   readSpecText,
 } from "./utils/productSpecs";
+import { pushTryonEvent } from "./utils/tracking";
 import type { VtexFrame } from "./types";
 // Default styling for the handles below (single-class, theme-overridable).
 import "./VirtualTryon.css";
@@ -161,6 +162,7 @@ function useFrameFromContext(): VtexFrame | null {
     return {
       productId: product.productId,
       skuId: sku.itemId,
+      referenceId: sku.referenceId?.[0]?.Value,
       name: product.productName,
       brand: product.brand,
       imageUrl: image?.imageUrl ?? "",
@@ -212,6 +214,7 @@ export default function VirtualTryon({
 
   function handleOpen() {
     if (frameFromContext) setSelectedFrame(frameFromContext);
+    pushTryonEvent("virtual_tryon_open", frameFromContext);
     setOpen(true);
   }
 

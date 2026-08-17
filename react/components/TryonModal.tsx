@@ -8,6 +8,7 @@ import { TryonCanvas3D } from "./TryonCanvas3D";
 import type { TryonCanvas3DHandle } from "./TryonCanvas3D";
 import { FrameSelector } from "./FrameSelector";
 import { ConsentGate } from "./ConsentGate";
+import { pushTryonEvent } from "../utils/tracking";
 import type { VtexFrame } from "../types";
 
 interface TryonModalProps {
@@ -96,8 +97,12 @@ export function TryonModal({ open, onClose, frames, modelUrl, frameWidthMm }: Tr
       a.download = `provador-virtual-${Date.now()}.png`;
       a.click();
       URL.revokeObjectURL(url);
+      // Dentro do toBlob para contar só download entregue, não clique no obturador.
+      // frames[0] em vez do selectedFrame do store: useTryonState é um useReducer
+      // local, então o frame setado no VirtualTryon não chega até aqui.
+      pushTryonEvent("virtual_tryon_photo_download", frames[0]);
     }, "image/png");
-  }, [videoRef]);
+  }, [videoRef, frames]);
 
   if (!open) return null;
 

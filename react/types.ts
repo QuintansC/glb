@@ -3,6 +3,8 @@ export type FitProfile = "small" | "medium" | "large";
 export interface VtexFrame {
   productId: string;
   skuId: string;
+  /** RefId do SKU — 1:1 com o SKU e é o "Código" que a loja exibe na PDP. */
+  referenceId?: string;
   name: string;
   brand: string;
   imageUrl: string;
