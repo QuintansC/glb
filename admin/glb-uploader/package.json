@@ -1,6 +1,7 @@
 {
   "name": "glb-uploader",
   "version": "0.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "private": true,
   "description": "Painel interno para cadastro de modelos 3D (.glb) do provador virtual no storage S3. Roda localmente na máquina de quem faz o cadastro.",
   "type": "module",

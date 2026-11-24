@@ -1,6 +1,7 @@
 {
   "name": "virtual-tryon-react",
   "version": "0.0.1",
+  "license": "PolyForm-Noncommercial-1.0.0",
   "dependencies": {},
   "devDependencies": {
     "@types/node": "^13.9.8",

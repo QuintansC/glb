@@ -46,3 +46,10 @@ vtex link
 vtex release minor stable
 vtex publish
 vtex install vendor.virtual-tryon@x.x.x
+```
+
+## Licença
+
+Source-available sob a [PolyForm Noncommercial License 1.0.0](../LICENSE).
+Uso não comercial é livre; **uso comercial exige licença do titular**
+(QuintansC). Contribuições são bem-vindas — veja [CONTRIBUTING.md](../CONTRIBUTING.md).
