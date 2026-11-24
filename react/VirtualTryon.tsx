@@ -20,7 +20,7 @@ import {
 import { pushTryonEvent } from "./utils/tracking";
 import type { VtexFrame } from "./types";
 // Default styling for the handles below (single-class, theme-overridable).
-import "./VirtualTryon.css";
+import styles from "./VirtualTryon.css";
 
 const CSS_HANDLES = ["tryonButton", "tryonButtonIcon"] as const;
 
@@ -224,9 +224,9 @@ export default function VirtualTryon({
 
   return (
     <>
-      <button type="button" onClick={handleOpen} className={handles.tryonButton}>
+      <button type="button" onClick={handleOpen} className={`${handles.tryonButton} ${styles.tryonButton}`}>
         <svg
-          className={handles.tryonButtonIcon}
+          className={`${handles.tryonButtonIcon} ${styles.tryonButtonIcon}`}
           width="20"
           height="20"
           viewBox="0 0 24 24"

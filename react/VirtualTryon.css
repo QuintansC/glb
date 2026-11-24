@@ -1,16 +1,13 @@
 /*
  * Default styling for the Provador Virtual CTA.
  *
- * The selectors are scoped to the generated CSS Handle classes
- * (`useCssHandles(['tryonButton', 'tryonButtonIcon'])`), so all styling lives
- * on a single class handle — no element/attribute selectors, in line with
- * VTEX's move away from deprecated CSS selectors (bit.ly/io-css-selectors).
+ * Os seletores usam classes locais deste CSS module (`styles.tryonButton`),
+ * aplicadas no componente junto com os CSS Handles. Assim o estilo funciona
+ * com qualquer `vendor` do manifest.json, sem nome de conta fixo aqui.
  *
- * A store theme can override any of these rules by targeting the same handle
- * class in its own `styles/css/vendor.virtual-tryon.css`.
- *
- * NOTE: the `0-x` segment is the app major version. Bump it here if the app's
- * major version changes (vtex-{app}-{major}-x-{handle}).
+ * O tema da loja pode sobrescrever qualquer regra mirando a classe do handle
+ * gerada pela VTEX (`{vendor}-virtual-tryon-{major}-x-tryonButton`) no seu
+ * próprio `styles/css/{vendor}.virtual-tryon.css`.
  */
 
 /*
@@ -20,7 +17,7 @@
  * o visual do botão. pointer-events: auto reativa o clique dentro do
  * overlay, que usa pointer-events: none para não bloquear o zoom da imagem.
  */
-:global(.vendor-virtual-tryon-0-x-tryonButton) {
+.tryonButton {
   pointer-events: auto;
   display: flex;
   align-items: center;
@@ -44,12 +41,12 @@
   transition: all 0.3s ease-in-out;
 }
 
-:global(.vendor-virtual-tryon-0-x-tryonButton):hover {
+.tryonButton:hover {
   background: #f4f4f4;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
 }
 
-:global(.vendor-virtual-tryon-0-x-tryonButtonIcon) {
+.tryonButtonIcon {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
